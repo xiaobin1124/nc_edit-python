@@ -3,7 +3,7 @@
 '''
  a netcdf file editing tool for duplicating , modifying and deleting data and attributes.
  rationale: enumerate feature in netCDF4 python, data manipulation in the memory.
- xiaobin
+ xiaobin, 20181229
 '''
 
 from netCDF4 import Dataset,MFDataset,MFTime,num2date
@@ -81,8 +81,6 @@ class nc_edit:
     fname_out=file_name
     if file_name is not None:
       fname_out=file_name
-    elif in_place:
-      fname_out=self.file_in_name
     else:
       postfix='.nc'
       fname_out=self.file_in_name+postfix
@@ -149,6 +147,8 @@ class nc_edit:
            print('add var',i)
            tmp=fout.createVariable(i,self.add_var_dtype[ni],self.add_var_dim[ni])
            tmp[:]=self.add_var_data[ni][:]
+    if in_place:
+      os.rename(fname_out,self.file_in_name)
 
 if __name__ == '__main__':
   nced=nc_edit('/VIP/pp292/dataout/2018122712/tco.rz.2018122712.ocean_u_2019_01_01.nc')
