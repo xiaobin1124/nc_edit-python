@@ -34,6 +34,8 @@ class nc_edit:
 ##################
     self.del_var_name=[]
     self.del_dim_name=[]
+    self.edit_dim_name=[]
+    self.edit_dim_data=[]
 
   def edit_variables(self,var_name,var_data=None,var_dtype=None,var_dim=None,\
                      scale=None,add_offset=None,fill_value=None,zlib=None):
@@ -71,12 +73,63 @@ class nc_edit:
 
     self.edit_var_scale=scale
     self.edit_var_offset=add_offset
+
+  def add_variables(self,var_name,var_dim,var_data=None,var_dtype=None,\
+                     scale=None,add_offset=None,fill_value=None,zlib=None):
+    assert isinstance(var_name,list)
+    self.add_var_name=var_name
+    if var_data is not None:
+      assert isinstance(var_data,list) and len(var_name)==len(var_data)
+      self.add_var_data=var_data
+    else:
+      self.add_var_data=[self.fin.variables[i] for i in self.add_var_name]
+
+    if var_dtype is not None:
+      assert isinstance(var_dtype,list) and len(var_name)==len(var_dtype)
+      self.add_var_dtype=var_dtype
+    else:
+      self.add_var_dtype=['f4' for i in self.add_var_name]
+
+    assert isinstance(var_dim,list) and len(var_name)==len(var_dim)
+    self.add_var_dim=var_dim
+
+    if zlib is not None:
+      assert isinstance(zlib,list) and len(var_name)==len(zlib)
+      self.add_var_zlib=zlib
+    else:
+      self.add_var_zlib=[False for i in self.add_var_name]
+
+    if fill_value is not None:
+      assert isinstance(fill_value,list) and len(var_name)==len(fill_value)
+      self.add_var_missing=fill_value
+    else:
+      self.add_var_missing=[None for i in self.add_var_name]
+
+    self.add_var_scale=scale
+    self.add_var_offset=add_offset
   '''
   def add_variables(self,var_name,var_dim,var_data=None,var_dtype=None,scale=None,add_offset=None):
-  def delete_variables:
   def add_dimension
-  def delete_dimension
   '''
+  '''
+  '''
+  def edit_dimensions(self,dim_name,dim_data):
+    '''
+    we assume all the dimensions are also defined with corresponding variables.
+    '''
+    assert isinstance(dim_data,list) and len(dim_name)==len(dim_data)
+    self.edit_dim_name=dim_name
+    self.edit_dim_data=dim_data
+    #self.edit_var_name.append(dim_name)
+    #self.edit_var_data.append(dim_data)
+
+  def delete_variables(self,var_name):
+    assert isinstance(var_name,list)
+    self.del_var_name=var_name
+  def delete_dimensions(self,dim_name):
+    assert isinstance(dim_name,list)
+    self.del_dim_name=dim_name
+
   def output(self,file_name=None,in_place=False,format='NETCDF4_CLASSIC'):
     fname_out=file_name
     if file_name is not None:
@@ -95,11 +148,15 @@ class nc_edit:
         #note the exception for time
         for i in dimin.iterkeys():   # copy dimension
            if i not in self.del_dim_name:
-             print i
-             if i.lower()=='time': #this line should be changed, time axis should be determained through axis attr not its name
-               fout.createDimension(i,None)
+             if i in self.edit_dim_name:
+               indx=self.edit_dim_name.index(i)
+               fout.createDimension(i,len(self.edit_dim_data[indx]))
              else:
-               fout.createDimension(i,len(dimin[i]))
+               print i
+               if i.lower()=='time': #this line should be changed, time axis should be determained through axis attr not its name
+                 fout.createDimension(i,None)
+               else:
+                 fout.createDimension(i,len(dimin[i]))
         for i in self.add_dim_name: # add dimension
              if i.lower()=='time':
                fout.createDimension(i,None)
@@ -145,14 +202,42 @@ class nc_edit:
                 tmp[:]=invar[:]
         for ni,i in enumerate(self.add_var_name):
            print('add var',i)
-           tmp=fout.createVariable(i,self.add_var_dtype[ni],self.add_var_dim[ni])
+           tmp=fout.createVariable(i,self.add_var_dtype[ni],self.add_var_dim[ni],zlib=self.add_var_zlib[ni],fill_value=self.add_var_missing[ni])
+           if self.add_var_missing[ni] is not None:
+             tmp.setncattr('missing_value',self.add_var_missing[ni])
+           if self.add_var_scale is not None :
+             tmp.setncattr('scale_factor',self.add_var_scale[ni])
+           if self.add_var_offset is not None:
+             tmp.setncattr('add_offset',self.add_var_offset[ni])
            tmp[:]=self.add_var_data[ni][:]
     if in_place:
       os.rename(fname_out,self.file_in_name)
 
 if __name__ == '__main__':
-  nced=nc_edit('/VIP/pp292/dataout/2018122712/tco.rz.2018122712.ocean_u_2019_01_01.nc')
-  #nced.edit_variables(var_name=['U'],var_dtype=['i2'],scale=[0.001,],zlib=[True,])
+  nced=nc_edit('/VIP/pp292/dataout/2019012712/tco.rz.2019012712.ocean_u_2019_01_28.nc')
   nced.edit_variables(var_name=['U'],var_dtype=['i2'],scale=[0.00025,],fill_value=[-32768,],zlib=[True,])
-  nced.output('/VIP/pp292/dataout/2018122712/tco.rz.2018122712.ocean_u_2019_01_01.nc.nc')
+  nced.delete_variables(var_name=['U'])
+  nced.output('/VIP/pp292/dataout/2019012712/tco.rz.2019012712.ocean_u_2019_01_28.nc.nc')
+  import numpy as np
+  from netCDF4 import Dataset
+  #from nc_edit import nc_edit
+
+  fin=Dataset('/VIP/pp292/xiaob/MOM/MOM5/work/p25BT_Gebco_bedmap2/INPUT/Bedmap2_thick_p25grd.nc','r')
+  ice_thick=fin.variables['thick'][:]
+  fin=Dataset('/VIP/pp292/xiaob/MOM/MOM5/work/p25BT_Gebco_bedmap2/INPUT/grid_spec.nc','r')
+  depth=fin.variables['depth_t'][:]
+  ice_mask=np.zeros(shape=depth.shape)
+  ice_mask[(depth>0.) & (ice_thick>2.)]=1
+
+  nced=nc_edit('/VIP/pp292/xiaob/MOM/MOM5/work/p25BT_Gebco_bedmap2//INPUT/Bedmap2_thick_p25grd.nc')
+  nced.delete_variables(var_name=['thick',])
+  nced.add_variables(var_name=['iceshelf_mask',],var_data=[ice_mask,],var_dim=[('y','x'),])
+  nced.output('/VIP/pp292/xiaob/MOM/MOM5/work/p25BT_Gebco_bedmap2/make_iceshelf_mask/iceshelf_mask.nc')
+
+  #20190218
+  fin=Dataset('/VIP/pp292/xiaob/MOM/MOM5/work/p1_WTC/INPUT/grid_spec.nc','r')
+  new_depth=fin.variables['zt'][:]
+  ne=nc_edit('/VIP/pp292/xiaob/EN4/EN.4.2.1.f.analysis.g10.201811.nc')
+  ne.edit_dimensions(dim_name=['depth'],dim_data=[new_depth,])
+  ne.output('/VIP/pp292/xiaob/EN4/EN.4.2.1.f.analysis.g10.201811-rz.nc')
 
