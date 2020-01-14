@@ -22,7 +22,6 @@ class nc_edit:
     self.edit_var_offset=[]
     self.edit_var_missing=[]
 ##################
-#not yet finished
     self.add_var_name  = []
     self.add_var_dim   = []
     self.add_var_data  = []
@@ -240,4 +239,13 @@ if __name__ == '__main__':
   ne=nc_edit('/VIP/pp292/xiaob/EN4/EN.4.2.1.f.analysis.g10.201811.nc')
   ne.edit_dimensions(dim_name=['depth'],dim_data=[new_depth,])
   ne.output('/VIP/pp292/xiaob/EN4/EN.4.2.1.f.analysis.g10.201811-rz.nc')
+
+  #20190831 e.g.: edit_dimensions, edit_variables.
+  # Issue TBD: edit_dimensions now support redefine an exist dimension according to len(dim_data),
+  # however, if the edited dimensions have corresponding variables the data of dim_data cannot pass
+  # to it.
+  nced=nc_edit("/vol7/home/haijun/FIOCOM/xiaobin/20190829-1b16test/p1mosaic/topog.nc")
+  nced.edit_dimensions(dim_name=['nx','ny'],dim_data=[xo,yo])
+  nced.edit_variables(var_name=['depth'],var_data=[depth1])
+  nced.output('topog1b16.nc')
 
