@@ -1,5 +1,3 @@
-#!/HOME/pp292/VIPSPACE/tools/anaconda2/bin/python
-
 '''
  a netcdf file editing tool for duplicating , modifying and deleting data and attributes.
  rationale: enumerate feature in netCDF4 python, data manipulation in the memory.
@@ -194,6 +192,12 @@ class nc_edit:
                 if self.edit_var_offset is not None:
                   tmp.setncattr('add_offset',self.edit_var_offset[indx])
                 tmp[:]=self.edit_var_data[self.edit_var_name.index(i)][:]
+             elif i in self.edit_dim_name:
+                indx=self.edit_dim_name.index(i)
+                tmp=fout.createVariable(i,invar.dtype,invar.dimensions)
+                for iattr in invar.ncattrs():
+                   tmp.setncattr(iattr,invar.getncattr(iattr))
+                tmp[:]=self.edit_dim_data[indx][:]
              else:
                 tmp=fout.createVariable(i,invar.dtype,invar.dimensions)
                 for iattr in invar.ncattrs():
