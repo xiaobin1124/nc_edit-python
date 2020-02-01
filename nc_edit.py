@@ -149,7 +149,7 @@ class nc_edit:
                indx=self.edit_dim_name.index(i)
                fout.createDimension(i,len(self.edit_dim_data[indx]))
              else:
-               print i
+               print(i)
                if i.lower()=='time': #this line should be changed, time axis should be determained through axis attr not its name
                  fout.createDimension(i,None)
                else:
@@ -165,11 +165,11 @@ class nc_edit:
            if (i not in self.del_var_name) and (i not in self.del_dim_name):
              invar=vin[i]
              if i in self.edit_var_name:
-                print 'edit var '+i
+                print('edit var '+i)
                 indx=self.edit_var_name.index(i)
                 tmp=fout.createVariable(i,self.edit_var_dtype[indx],self.edit_var_dim[indx],zlib=self.edit_var_zlib[indx],fill_value=self.edit_var_missing[indx])
                 for iattr in invar.ncattrs():
-                   print 'xiao 1.2 '+iattr
+                   print('xiao 1.2 '+iattr)
                    if not iattr == '_FillValue':
                      #print 'xiao 0 '+iattr
                      #print invar
