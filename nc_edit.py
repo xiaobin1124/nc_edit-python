@@ -85,7 +85,7 @@ class nc_edit:
       assert isinstance(var_dtype,list) and len(var_name)==len(var_dtype)
       self.add_var_dtype=var_dtype
     else:
-      self.add_var_dtype=['f4' for i in self.add_var_name]
+      self.add_var_dtype=['f8' for i in self.add_var_name]
 
     assert isinstance(var_dim,list) and len(var_name)==len(var_dim)
     self.add_var_dim=var_dim
@@ -143,7 +143,7 @@ class nc_edit:
            fout.setncattr(i,self.fin.getncattr(i))
         #iterate all the dimensions of srcfile and clone them in the outfile
         #note the exception for time
-        for i in dimin.iterkeys():   # copy dimension
+        for i in dimin():   # copy dimension
            if i not in self.del_dim_name:
              if i in self.edit_dim_name:
                indx=self.edit_dim_name.index(i)
@@ -161,7 +161,7 @@ class nc_edit:
                fout.createDimension(i,self.add_dim_size[self.add_dim_name.index(i)])
         #iterate all the variables of srcfile and clone them in the outfile
         #perform the modification for specific var
-        for i in vin.iterkeys():
+        for i in vin():
            if (i not in self.del_var_name) and (i not in self.del_dim_name):
              invar=vin[i]
              if i in self.edit_var_name:
@@ -252,4 +252,11 @@ if __name__ == '__main__':
   nced.edit_dimensions(dim_name=['nx','ny'],dim_data=[xo,yo])
   nced.edit_variables(var_name=['depth'],var_data=[depth1])
   nced.output('topog1b16.nc')
+
+  nced=nc_edit("/vol7/home/haijun/FIOCOM/xiaobin/20190829-1b16test/p1mosaic/topog.nc")
+  nced.edit_dimensions(dim_name=['nx','ny'],dim_data=[xo,yo])
+  nced.add_variables(var_name=['nx','ny'],var_dim=[('nx',),('ny',)],var_data=[xo,yo])
+  nced.edit_variables(var_name=['depth'],var_data=[depth1])
+  nced.output('topog1b%s_frac0.1-min_dep15.1.nc' % str(reso))
+  
 
