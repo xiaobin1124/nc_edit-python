@@ -200,11 +200,15 @@ class nc_edit:
                    tmp.setncattr(iattr,invar.getncattr(iattr))
                 tmp[:]=self.edit_dim_data[indx][:]
              else:
-                tmp=fout.createVariable(i,invar.dtype,invar.dimensions)
+                try:
+                   tmp=fout.createVariable(i, invar.dtype, invar.dimensions, fill_value=invar.getncattr("_FillValue"))
+                   print('Using src _FillValue.')
+                except:
+                   tmp=fout.createVariable(i, invar.dtype, invar.dimensions, fill_value=-1e20)
                 for iattr in invar.ncattrs():
-                   tmp.setncattr(iattr,invar.getncattr(iattr))
+                   if iattr != "_FillValue": tmp.setncattr(iattr,invar.getncattr(iattr))
                 tmp[:]=invar[:]
-        for ni,i in enumerate(self.add_var_name):
+        for ni, i in enumerate(self.add_var_name):
            print('add var',i)
            tmp=fout.createVariable(i,self.add_var_dtype[ni],self.add_var_dim[ni],zlib=self.add_var_zlib[ni],fill_value=self.add_var_missing[ni])
            if self.add_var_missing[ni] is not None:
