@@ -8,6 +8,7 @@ from netCDF4 import Dataset,MFDataset,MFTime,num2date
 import datetime
 import numpy as np
 from collections import OrderedDict
+import os
 
 class nc_edit:
   def __init__(self,file_in_name):
@@ -143,7 +144,7 @@ class nc_edit:
            fout.setncattr(i,self.fin.getncattr(i))
         #iterate all the dimensions of srcfile and clone them in the outfile
         #note the exception for time
-        for i in dimin():   # copy dimension
+        for i in dimin:   # copy dimension
            if i not in self.del_dim_name:
              if i in self.edit_dim_name:
                indx=self.edit_dim_name.index(i)
@@ -161,7 +162,7 @@ class nc_edit:
                fout.createDimension(i,self.add_dim_size[self.add_dim_name.index(i)])
         #iterate all the variables of srcfile and clone them in the outfile
         #perform the modification for specific var
-        for i in vin():
+        for i in vin:
            if (i not in self.del_var_name) and (i not in self.del_dim_name):
              invar=vin[i]
              if i in self.edit_var_name:
