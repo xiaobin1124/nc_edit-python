@@ -128,7 +128,7 @@ class nc_edit:
     assert isinstance(dim_name,list)
     self.del_dim_name=dim_name
 
-  def output(self,file_name=None,in_place=False,format='NETCDF4_CLASSIC'):
+  def output(self,file_name=None,in_place=False,format='NETCDF4_CLASSIC',default_zlib=False):
     fname_out=file_name
     if file_name is not None:
       fname_out=file_name
@@ -201,10 +201,10 @@ class nc_edit:
                 tmp[:]=self.edit_dim_data[indx][:]
              else:
                 try:
-                   tmp=fout.createVariable(i, invar.dtype, invar.dimensions, fill_value=invar.getncattr("_FillValue"))
+                   tmp=fout.createVariable(i, invar.dtype, invar.dimensions, fill_value=invar.getncattr("_FillValue"),zlib=default_zlib)
                    print('Using src _FillValue.')
                 except:
-                   tmp=fout.createVariable(i, invar.dtype, invar.dimensions, fill_value=-1e20)
+                   tmp=fout.createVariable(i, invar.dtype, invar.dimensions, fill_value=-1e20,zlib=default_zlib)
                 for iattr in invar.ncattrs():
                    if iattr != "_FillValue": tmp.setncattr(iattr,invar.getncattr(iattr))
                 tmp[:]=invar[:]
