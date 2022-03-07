@@ -73,7 +73,7 @@ class nc_edit:
     self.edit_var_offset=add_offset
 
   def add_variables(self,var_name,var_dim,var_data=None,var_dtype=None,\
-                     scale=None,add_offset=None,fill_value=None,zlib=None):
+                     scale=None,add_offset=None,fill_value=None,zlib=None,var_attr=None):
     assert isinstance(var_name,list)
     self.add_var_name=var_name
     if var_data is not None:
@@ -102,6 +102,12 @@ class nc_edit:
       self.add_var_missing=fill_value
     else:
       self.add_var_missing=[None for i in self.add_var_name]
+
+    if var_attr is not None:
+       assert isinstance(var_attr,list) and len(var_attr)==len(var_name)
+       self.add_var_attr=var_attr
+    else:
+       self.add_var_attr=None
 
     self.add_var_scale=scale
     self.add_var_offset=add_offset
@@ -211,6 +217,11 @@ class nc_edit:
         for ni, i in enumerate(self.add_var_name):
            print('add var',i)
            tmp=fout.createVariable(i,self.add_var_dtype[ni],self.add_var_dim[ni],zlib=self.add_var_zlib[ni],fill_value=self.add_var_missing[ni])
+
+           if self.add_var_attr is not None:
+             for iattr in self.add_var_attr[ni]:
+               tmp.setncattr(iattr,self.add_var_attr[ni][iattr])
+
            if self.add_var_missing[ni] is not None:
              tmp.setncattr('missing_value',self.add_var_missing[ni])
            if self.add_var_scale is not None :
@@ -263,5 +274,15 @@ if __name__ == '__main__':
   nced.add_variables(var_name=['nx','ny'],var_dim=[('nx',),('ny',)],var_data=[xo,yo])
   nced.edit_variables(var_name=['depth'],var_data=[depth1])
   nced.output('topog1b%s_frac0.1-min_dep15.1.nc' % str(reso))
+
+  #20220308 add_variables user defined attrs.
+  nced=nc_edit(fname)
+  guo_attr={'name':'geostrophic velocity u component.','unit':'m/s'}
+  gvo_attr={'name':'geostrophic velocity v component.','unit':'m/s'}
+  nced.add_variables(var_name=['u_geos','v_geos'],\
+       var_dim=[('time','yt_ocean','xt_ocean'),('time','yt_ocean','xt_ocean')],\
+            var_dtype=['f4','f4'],var_data=[guo,gvo],var_attr=[guo_attr,gvo_attr])
+  nced.output()
+
   
 
